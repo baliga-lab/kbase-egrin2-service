@@ -6,5 +6,5 @@ Here at [Baliga Lab](http://baliga.sytemsbiology.net), [Institute for Systems Bi
 
 We use an automated pipeline for generating EGRIN 2.0 models. This service is an implementation of our pipeline on the DOE KBase infrastructure.
 
-For detailed documentation, please consult the project [Wiki](wiki).
+For detailed documentation, please consult the project [Wiki](https://github.com/baliga-lab/kbase-egrin2-service/wiki).
 
