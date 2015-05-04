@@ -28,10 +28,15 @@ class EGRIN2:
         #END_CONSTRUCTOR
         pass
 
-    def run_ensemble(self, ctx, num_runs):
+    def run_ensemble(self, ctx, params):
         # ctx is the context object
         # return variables are: jobid
         #BEGIN run_ensemble
+        print "RUNNING ENSEMBLE"
+        print "# RUNS: %d" % params['num_runs']
+        print "organism: %s" % params['organism']
+
+        jobid = "12345"
         #END run_ensemble
 
         # At some point might do deeper type checking...
