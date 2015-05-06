@@ -24,7 +24,7 @@ class EGRIN2:
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
-        print "This is a test constructor"
+        self.config = config
         #END_CONSTRUCTOR
         pass
 
@@ -33,6 +33,9 @@ class EGRIN2:
         # return variables are: jobid
         #BEGIN run_ensemble
         print "RUNNING ENSEMBLE"
+        print "AWE service at: %s" % self.config['awe_service_url']
+        print "Shock service at: %s" % self.config['shock_service_url']
+        print "UJS service at: %s" % self.config['shock_service_url']
         print "# RUNS: %d" % params['num_runs']
         print "organism: %s" % params['organism']
 
