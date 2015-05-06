@@ -33,6 +33,7 @@ class EGRIN2:
         print "AWE service at: %s" % self.config['awe_service_url']
         print "Shock service at: %s" % self.config['shock_service_url']
         print "UJS service at: %s" % self.config['shock_service_url']
+	print config
         #END_CONSTRUCTOR
         pass
 
@@ -48,6 +49,7 @@ class EGRIN2:
         tmpfile = tempfile.NamedTemporaryFile(mode='w', delete=False)
         tmpfile.write(params['ratios'])
         tmpfile.close()
+        print "the TMPFILE IS: ", tmpfile.name
 
         shock_client = shock.ShockClient(self.config['shock_service_url'], ctx['token'])
         result = shock_client.upload_file(tmpfile.name)

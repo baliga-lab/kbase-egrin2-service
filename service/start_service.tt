@@ -9,5 +9,5 @@ export KB_DEPLOYMENT_CONFIG=$KB_TOP/deployment.cfg
 
 pid_file=$KB_SERVICE_DIR/service.pid
 
-exec $KB_RUNTIME/bin/perl $KB_RUNTIME/bin/starman --listen :[% kb_service_port %] --pid $pid_file $KB_TOP/lib/[% kb_psgi %] --error-log $KB_SERVICE_DIR/error.log --workers 20 
-PYTHONPATH=$KB_TOP/lib python $KB_TOP/lib/EGRIN2Server.py --host 0.0.0.0 --port :[% kb_service_port %]
+#exec $KB_RUNTIME/bin/perl $KB_RUNTIME/bin/starman --listen :[% kb_service_port %] --pid $pid_file $KB_TOP/lib/[% kb_psgi %] --error-log $KB_SERVICE_DIR/error.log --workers 20 
+PYTHONPATH=$KB_TOP/lib python $KB_TOP/lib/EGRIN2Server.py --host 0.0.0.0 --port [% kb_service_port %]

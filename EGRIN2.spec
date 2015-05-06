@@ -32,5 +32,5 @@ module EGRIN2 {
      * Starts an ensemble run. The state of the computation can be obtained by
      * querying the UserAndJobState service using the returned job id
      */
-    funcdef run_ensemble(EnsembleParams params) returns (job_id jobid);
+    funcdef run_ensemble(EnsembleParams params) returns (job_id jobid) authentication required;
 };
