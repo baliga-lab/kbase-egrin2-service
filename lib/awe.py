@@ -16,3 +16,15 @@ class AWEClient:
         r = requests.post(self.base_url + '/job', files=files,
                           headers=self.auth_headers())
         return r.json()
+
+
+class WorkflowDocumentBuilder:
+    """a builder class to help creating an AWE workflow document"""
+
+    def __init__(self, pipeline, name, project, user, clientgroups):
+        self.doc = {
+            'info': { 'pipeline': pipeline, 'name': name, 'project': project,
+                      'user': user, 'clientgroups': clientgroups
+                  },
+            'tasks': []
+        }
