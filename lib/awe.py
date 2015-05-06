@@ -18,13 +18,28 @@ class AWEClient:
         return r.json()
 
 
+class Command:
+    def __init__(self, name, args='', description=''):
+        self.cmd = {'name': name, 'args': args, 'description': description}
+
+
 class WorkflowDocumentBuilder:
     """a builder class to help creating an AWE workflow document"""
 
-    def __init__(self, pipeline, name, project, user, clientgroups):
+    def __init__(self, pipeline, name, project, user, clientgroups, tasks=[], noretry=True):
         self.doc = {
             'info': { 'pipeline': pipeline, 'name': name, 'project': project,
-                      'user': user, 'clientgroups': clientgroups
+                      'user': user, 'clientgroups': clientgroups, 'noretry': noretry
                   },
-            'tasks': []
+            'tasks': tasks
         }
+
+    def add_task(self, command, task_id, skip=False, totalwork=1, depends_on=[]):
+        skip_num = 1 if skip else 0
+
+        self.doc['tasks'].append({
+            'cmd': command.cmd,
+            'taskid': task_id,
+            'skip': skip_num,
+            'dependsOn': depends_on
+        })

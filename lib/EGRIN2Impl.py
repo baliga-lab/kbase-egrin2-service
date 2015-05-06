@@ -1,4 +1,9 @@
 #BEGIN_HEADER
+import tempfile
+import os
+
+import shock
+import awe
 #END_HEADER
 
 
@@ -25,6 +30,9 @@ class EGRIN2:
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.config = config
+        print "AWE service at: %s" % self.config['awe_service_url']
+        print "Shock service at: %s" % self.config['shock_service_url']
+        print "UJS service at: %s" % self.config['shock_service_url']
         #END_CONSTRUCTOR
         pass
 
@@ -33,11 +41,18 @@ class EGRIN2:
         # return variables are: jobid
         #BEGIN run_ensemble
         print "RUNNING ENSEMBLE"
-        print "AWE service at: %s" % self.config['awe_service_url']
-        print "Shock service at: %s" % self.config['shock_service_url']
-        print "UJS service at: %s" % self.config['shock_service_url']
+        print "auth token: ", ctx['token']
+
         print "# RUNS: %d" % params['num_runs']
         print "organism: %s" % params['organism']
+        tmpfile = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        tmpfile.write(params['ratios'])
+        tmpfile.close()
+
+        shock_client = shock.ShockClient(self.config['shock_service_url'], ctx['token'])
+        result = shock_client.upload_file(tmpfile.name)
+        os.unlink(tmpfile.name)
+        print "RESULT OF SHOCK: ", result
 
         jobid = "12345"
         #END run_ensemble
