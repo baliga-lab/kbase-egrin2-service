@@ -31,6 +31,10 @@ module EGRIN2 {
     /*
      * Starts an ensemble run. The state of the computation can be obtained by
      * querying the UserAndJobState service using the returned job id
+     *
+     * Notes:
+     * We need to propagate the authentication token, marking this function
+     * as "authentication required" will put the token into the context object
      */
     funcdef run_ensemble(EnsembleParams params) returns (job_id jobid) authentication required;
 };

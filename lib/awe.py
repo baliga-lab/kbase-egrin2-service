@@ -1,4 +1,5 @@
 import requests
+import json
 
 
 class AWEClient:
@@ -23,6 +24,25 @@ class Command:
         self.cmd = {'name': name, 'args': args, 'description': description}
 
 
+class Task:
+    def __init__(self, command, task_id, totalwork=1, depends_on=[], skip=False,
+                 inputs={}, outputs={}):
+        skip_num = 1 if skip else 0
+        self.task = {'cmd': command.cmd,
+                     'taskid': task_id,
+                     'skip': skip_num,
+                     'dependsOn': depends_on,
+                     'inputs': inputs,
+                     'outputs': outputs
+                 }
+
+    def add_shock_input(self, refname, url, node):
+        self.task['inputs'][refname] = {'host': url, 'node': node }
+
+    def add_shock_output(self, refname, url, attrfile):
+        self.task['outputs'][refname] = {'host': url, 'attrfile': attrfile}
+
+
 class WorkflowDocumentBuilder:
     """a builder class to help creating an AWE workflow document"""
 
@@ -34,12 +54,13 @@ class WorkflowDocumentBuilder:
             'tasks': tasks
         }
 
-    def add_task(self, command, task_id, skip=False, totalwork=1, depends_on=[]):
-        skip_num = 1 if skip else 0
+    def add_task(self, task):
+        self.doc['tasks'].append(task.task)
 
-        self.doc['tasks'].append({
-            'cmd': command.cmd,
-            'taskid': task_id,
-            'skip': skip_num,
-            'dependsOn': depends_on
-        })
+if __name__ == '__main__':
+    builder = WorkflowDocumentBuilder('pipeline1', 'name1', 'prj1', 'user1', 'group1')
+    command = Command('mycmd', 'args')
+    task = Task(command, 1)
+    task.add_shock_input('mafile', 'http://shocky.com', 'node1')
+    builder.add_task(task)
+    print json.dumps(builder.doc)

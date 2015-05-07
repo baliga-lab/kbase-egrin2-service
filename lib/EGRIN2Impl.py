@@ -1,6 +1,7 @@
 #BEGIN_HEADER
 import tempfile
 import os
+import json
 
 import shock
 import awe
@@ -54,6 +55,18 @@ class EGRIN2:
         shock_client = shock.ShockClient(self.config['shock_service_url'], ctx['token'])
         result = shock_client.upload_file(tmpfile.name)
         os.unlink(tmpfile.name)
+        builder = awe.WorkflowDocumentBuilder('pipeline', 'name', 'default', 'ubuntu', 'kbase')
+        command = Command("cat", "@infile > /home/ubuntu/AWE_fromshock.txt")
+        task = Task(command, 1)
+        task.add_shock_input('infile', self.config['shock_service_url', tmpfile.name])
+        builder.add_task(task)
+
+        awe_tmp = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        awe_tmp.write(json.dumps(builder.doc))
+        awe_tmp.close()
+        awe_client = awe.AWEClient(self.config['awe_service_url'], ctx['token'])
+        awe_client.submit_job(awe_tmp.name)
+        os.unlink(awe_tmp.name)
         print "RESULT OF SHOCK: ", result
 
         jobid = "12345"
