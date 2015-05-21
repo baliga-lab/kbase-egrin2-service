@@ -2,9 +2,9 @@
 import tempfile
 import os
 import json
-
 import shock
 import awe
+import traceback
 #END_HEADER
 
 
@@ -53,23 +53,47 @@ class EGRIN2:
         print "the TMPFILE IS: ", tmpfile.name
 
         shock_client = shock.ShockClient(self.config['shock_service_url'], ctx['token'])
-        result = shock_client.upload_file(tmpfile.name)
-        os.unlink(tmpfile.name)
-        builder = awe.WorkflowDocumentBuilder('pipeline', 'name', 'default', 'ubuntu', 'kbase')
-        command = Command("cat", "@infile > /home/ubuntu/AWE_fromshock.txt")
-        task = Task(command, 1)
-        task.add_shock_input('infile', self.config['shock_service_url', tmpfile.name])
-        builder.add_task(task)
+        try:
+          print "uploading input file ..."
+          shock_result = shock_client.upload_file(tmpfile.name)
+          print shock_result
+          file_id = shock_result['data']['id']
+        except:
+          print "error uploading file"
+          traceback.print_exc()
+          os.unlink(tmpfile.name)
 
-        awe_tmp = tempfile.NamedTemporaryFile(mode='w', delete=False)
-        awe_tmp.write(json.dumps(builder.doc))
-        awe_tmp.close()
-        awe_client = awe.AWEClient(self.config['awe_service_url'], ctx['token'])
-        awe_client.submit_job(awe_tmp.name)
-        os.unlink(awe_tmp.name)
-        print "RESULT OF SHOCK: ", result
+        print "building workflow document"
+        builder = awe.WorkflowDocumentBuilder('pipeline', 'name', project='default',
+                                              user='nwportal', clientgroups='kbase')
+        try:
+          #command = awe.Command("cat", "@infile > /home/ubuntu/AWE_fromshock.txt")
+          command = awe.Command("cp", "@infile /tmp/mytestfile")
+          task = awe.Task(command, "0")
+          task.add_shock_input('infile', self.config['shock_service_url'], file_id)
+          builder.add_task(task)
+          print builder.doc
 
-        jobid = "12345"
+          awe_tmp = tempfile.NamedTemporaryFile(mode='w', delete=False)
+          awe_tmp.write(json.dumps(builder.doc))
+        except:
+          traceback.print_exc()
+        finally:
+          awe_tmp.close()
+
+        try:
+          print "submitting AWE job"
+          awe_client = awe.AWEClient(self.config['awe_service_url'], ctx['token'])
+          awe_result = awe_client.submit_job(awe_tmp.name)
+          print awe_result
+          jobid = awe_result['data']['id']
+          print "job id: ", jobid
+        except:
+          print "ERRROR !!!!"
+          traceback.print_exc()
+        finally:
+          os.unlink(awe_tmp.name)
+
         #END run_ensemble
 
         # At some point might do deeper type checking...

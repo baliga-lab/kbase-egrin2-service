@@ -10,13 +10,14 @@ class AWEClient:
         self.auth_token = auth_token
 
     def auth_headers(self):
-        return {'Authorization': 'OAuth %s' % self.auth_token}
+        """set the authorization token needed to access Shock"""
+        return {'Datatoken': '%s' % self.auth_token}
 
     def submit_job(self, path):
         files = {'upload': open(path)}
         r = requests.post(self.base_url + '/job', files=files,
                           headers=self.auth_headers())
-        return r.json()
+        return r.json
 
 
 class Command:
@@ -46,7 +47,8 @@ class Task:
 class WorkflowDocumentBuilder:
     """a builder class to help creating an AWE workflow document"""
 
-    def __init__(self, pipeline, name, project, user, clientgroups, tasks=[], noretry=True):
+    def __init__(self, pipeline, name, project, user, clientgroups, tasks=[],
+                 noretry=True, auth=True):
         self.doc = {
             'info': { 'pipeline': pipeline, 'name': name, 'project': project,
                       'user': user, 'clientgroups': clientgroups, 'noretry': noretry
