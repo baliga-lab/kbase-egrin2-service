@@ -68,10 +68,19 @@ class EGRIN2:
                                               user='nwportal', clientgroups='kbase')
         try:
           #command = awe.Command("cat", "@infile > /home/ubuntu/AWE_fromshock.txt")
-          command = awe.Command("cp", "@infile /tmp/mytestfile")
+          #command = awe.Command("cp", "@infile /home/ubuntu/mytestfile")
+          #command = awe.Command("cp", "@infile outfile")
+          command = awe.Command("mycommand", "@infile stage0_out")
           task = awe.Task(command, "0")
-          task.add_shock_input('infile', self.config['shock_service_url'], file_id)
+          task.add_shock_input('infile', self.config['shock_service_url'], node=file_id)
+          task.add_shock_output('stage0_out', self.config['shock_service_url'], filename='stage0_out')
           builder.add_task(task)
+
+          command2 = awe.Command("cp", "@stage0_out /home/ubuntu/final_file.txt")
+          task2 = awe.Task(command2, "1", depends_on=["0"])
+          task2.add_shock_input('stage0_out', self.config['shock_service_url'], origin="0")
+          builder.add_task(task2)
+
           print builder.doc
 
           awe_tmp = tempfile.NamedTemporaryFile(mode='w', delete=False)

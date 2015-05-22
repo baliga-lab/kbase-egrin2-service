@@ -27,8 +27,14 @@ class Command:
 
 class Task:
     def __init__(self, command, task_id, totalwork=1, depends_on=[], skip=False,
-                 inputs={}, outputs={}):
+                 inputs=None, outputs=None):
         skip_num = 1 if skip else 0
+
+        if inputs is None:
+            inputs = {}
+        if outputs is None:
+            outputs = {}
+
         self.task = {'cmd': command.cmd,
                      'taskid': task_id,
                      'skip': skip_num,
@@ -37,18 +43,32 @@ class Task:
                      'outputs': outputs
                  }
 
-    def add_shock_input(self, refname, url, node):
-        self.task['inputs'][refname] = {'host': url, 'node': node }
+    def add_shock_input(self, refname, url, node=None, origin=None):
+        self.task['inputs'][refname] = {'host': url}
+        if node is not None:
+            self.task['inputs'][refname]['node'] = node
+        if origin is not None:
+            self.task['inputs'][refname]['origin'] = origin
 
-    def add_shock_output(self, refname, url, attrfile):
-        self.task['outputs'][refname] = {'host': url, 'attrfile': attrfile}
+
+    def add_shock_output(self, refname, url, filename=None, attrfile=None):
+        self.task['outputs'][refname] = {'host': url}
+
+        if filename is not None:
+            self.task['outputs'][refname]['filename'] = filename
+
+        if attrfile is not None:
+            self.task['outputs'][refname]['attrfile'] = attrfile
 
 
 class WorkflowDocumentBuilder:
     """a builder class to help creating an AWE workflow document"""
 
-    def __init__(self, pipeline, name, project, user, clientgroups, tasks=[],
+    def __init__(self, pipeline, name, project, user, clientgroups, tasks=None,
                  noretry=True, auth=True):
+        if tasks is None:
+            tasks = []
+
         self.doc = {
             'info': { 'pipeline': pipeline, 'name': name, 'project': project,
                       'user': user, 'clientgroups': clientgroups, 'noretry': noretry
@@ -59,10 +79,18 @@ class WorkflowDocumentBuilder:
     def add_task(self, task):
         self.doc['tasks'].append(task.task)
 
+
 if __name__ == '__main__':
     builder = WorkflowDocumentBuilder('pipeline1', 'name1', 'prj1', 'user1', 'group1')
-    command = Command('mycmd', 'args')
-    task = Task(command, 1)
-    task.add_shock_input('mafile', 'http://shocky.com', 'node1')
-    builder.add_task(task)
+
+    command1 = Command('mycmd', 'args')
+    task1 = Task(command1, "0")
+    task1.add_shock_input('mafile', 'http://shocky.com', 'node1')
+    builder.add_task(task1)
+
+    command2 = Command('mycmd2', 'args2')
+    task2 = Task(command2, "1")
+    task2.add_shock_input('mafile2', 'http://shocky.com', 'node2')
+    builder.add_task(task2)
+
     print json.dumps(builder.doc)
