@@ -1,4 +1,6 @@
 import requests
+import tempfile
+import os
 
 
 class ShockClient:
@@ -33,3 +35,21 @@ class ShockClient:
         with open(target_path, 'wb') as outfile:
             for chunk in r.iter_content(256):
                 outfile.write(chunk)
+
+
+def upload_data(data, service_url, auth_token):
+    tmpfile = tempfile.NamedTemporaryFile(mode='w', delete=False)
+    tmpfile.write(data)
+    tmpfile.close()
+    print "the TMPFILE IS: ", tmpfile.name
+
+    shock_client = ShockClient(service_url, auth_token)
+    try:
+        print "uploading input file ..."
+        shock_result = shock_client.upload_file(tmpfile.name)
+        print shock_result
+        return shock_result['data']['id']
+    except:
+        print "error uploading file"
+        traceback.print_exc()
+        os.unlink(tmpfile.name)

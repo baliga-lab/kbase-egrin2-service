@@ -19,9 +19,9 @@ module EGRIN2 {
     num_runs - number of runs
     */
     typedef structure {
-	      string organism;
-	      string ratios;
-	      int num_runs;
+        string organism;
+        string ratios;
+        int num_runs;
         int min_cols;
         BlockDefinitions block_defs;
         string pipeline;

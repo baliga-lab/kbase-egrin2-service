@@ -47,39 +47,57 @@ class EGRIN2:
 
         print "# RUNS: %d" % params['num_runs']
         print "organism: %s" % params['organism']
-        tmpfile = tempfile.NamedTemporaryFile(mode='w', delete=False)
-        tmpfile.write(params['ratios'])
-        tmpfile.close()
-        print "the TMPFILE IS: ", tmpfile.name
+        blocks = params["block_defs"]["blocks"]
+        inclusion_blocks = params["block_defs"]["inclusion_blocks"]
+        exclusion_blocks = params["block_defs"]["exclusion_blocks"]
 
-        shock_client = shock.ShockClient(self.config['shock_service_url'], ctx['token'])
-        try:
-          print "uploading input file ..."
-          shock_result = shock_client.upload_file(tmpfile.name)
-          print shock_result
-          file_id = shock_result['data']['id']
-        except:
-          print "error uploading file"
-          traceback.print_exc()
-          os.unlink(tmpfile.name)
+        ratios_file_id = shock.upload_data(params['ratios'],
+                                           self.config['shock_service_url'],
+                                           ctx['token'])
+        blocks_file_id = shock.upload_data(blocks,
+                                           self.config['shock_service_url'],
+                                           ctx['token'])
+        inclusion_file_id = shock.upload_data(inclusion_blocks,
+                                           self.config['shock_service_url'],
+                                           ctx['token'])
+        exclusion_file_id = shock.upload_data(exclusion_blocks,
+                                           self.config['shock_service_url'],
+                                           ctx['token'])
 
         print "building workflow document"
         builder = awe.WorkflowDocumentBuilder('pipeline', 'name', project='default',
                                               user='nwportal', clientgroups='kbase')
         try:
-          #command = awe.Command("cat", "@infile > /home/ubuntu/AWE_fromshock.txt")
-          #command = awe.Command("cp", "@infile /home/ubuntu/mytestfile")
-          #command = awe.Command("cp", "@infile outfile")
-          command = awe.Command("mycommand", "@infile stage0_out")
+
+          command = awe.Command("cm2awe.py", "--organism %s --ratios  @ratios_file --targetdir /home/ubuntu/splitting_awe --blocks @block_file --inclusion @inclusion_file --exclusion @exclusion_file" % params["organism"])
           task = awe.Task(command, "0")
-          task.add_shock_input('infile', self.config['shock_service_url'], node=file_id)
+          """
+          --organism mtb --ratios mtb_files/20141130.MTB.all.ratios.csv --targetdir splitting_awe --blocks mtb_files/20141202.MTB.EGRIN2.blocks.csv --inclusion mtb_files/20141202.MTB.EGRIN2.inclusion.blocks.csv --exclusion mtb_files/20141202.MTB.EGRIN2.exclusion.blocks.csv --nruns 100"""
+
+
+          task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
+          task.add_shock_input('block_file', self.config['shock_service_url'], node=blocks_file_id)
+          task.add_shock_input('inclusion_file', self.config['shock_service_url'], node=inclusion_file_id)
+          task.add_shock_input('exclusion_file', self.config['shock_service_url'], node=exclusion_file_id)
+
+          builder.add_task(task)
+
+          """
+          command = awe.Command("mycommand", "@block_file stage0_out")
+          task = awe.Task(command, "0")
+
+          task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
+          task.add_shock_input('block_file', self.config['shock_service_url'], node=blocks_file_id)
+          task.add_shock_input('inclusion_file', self.config['shock_service_url'], node=inclusion_file_id)
+          task.add_shock_input('exclusion_file', self.config['shock_service_url'], node=exclusion_file_id)
+
           task.add_shock_output('stage0_out', self.config['shock_service_url'], filename='stage0_out')
           builder.add_task(task)
 
           command2 = awe.Command("cp", "@stage0_out /home/ubuntu/final_file.txt")
           task2 = awe.Task(command2, "1", depends_on=["0"])
           task2.add_shock_input('stage0_out', self.config['shock_service_url'], origin="0")
-          builder.add_task(task2)
+          builder.add_task(task2)"""
 
           print builder.doc
 
