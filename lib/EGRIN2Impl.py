@@ -69,12 +69,12 @@ class EGRIN2:
                                               user='nwportal', clientgroups='kbase')
         try:
 
-          command = awe.Command("cm2awe.py", "--organism %s --ratios  @ratios_file --targetdir /home/ubuntu/splitting_awe --blocks @block_file --inclusion @inclusion_file --exclusion @exclusion_file" % params["organism"])
+          command = awe.Command("cm2awe.py",
+                                "--organism %s --nruns %d --ratios  @ratios_file --outfile /home/ubuntu/out.json --blocks @block_file --inclusion @inclusion_file --exclusion @exclusion_file" % (params["organism"], params['num_runs']),
+                                environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
+                                         "public": {"SHOCK_URL": self.config['shock_service_url']}})
+
           task = awe.Task(command, "0")
-          """
-          --organism mtb --ratios mtb_files/20141130.MTB.all.ratios.csv --targetdir splitting_awe --blocks mtb_files/20141202.MTB.EGRIN2.blocks.csv --inclusion mtb_files/20141202.MTB.EGRIN2.inclusion.blocks.csv --exclusion mtb_files/20141202.MTB.EGRIN2.exclusion.blocks.csv --nruns 100"""
-
-
           task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
           task.add_shock_input('block_file', self.config['shock_service_url'], node=blocks_file_id)
           task.add_shock_input('inclusion_file', self.config['shock_service_url'], node=inclusion_file_id)
