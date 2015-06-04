@@ -17,7 +17,8 @@ class AWEClient:
         files = {'upload': open(path)}
         r = requests.post(self.base_url + '/job', files=files,
                           headers=self.auth_headers())
-        return r.json
+        # Requests >= 2.x json made a method 1!!
+        return r.json()
 
 
 class Command:
