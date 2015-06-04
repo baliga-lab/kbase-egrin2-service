@@ -21,8 +21,10 @@ class AWEClient:
 
 
 class Command:
-    def __init__(self, name, args='', description=''):
+    def __init__(self, name, args='', description='', environ=None):
         self.cmd = {'name': name, 'args': args, 'description': description}
+        if environ is not None:
+            self.cmd['environ'] = environ
 
 
 class Task:
