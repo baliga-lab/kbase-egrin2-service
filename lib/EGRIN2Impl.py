@@ -74,9 +74,10 @@ class EGRIN2:
             
             command = awe.Command("cm2awe.py",
                                   "--organism %s --nruns %d --ratios  @ratios_file --outfile splitter_out --blocks @block_file --inclusion @inclusion_file --exclusion @exclusion_file" % (params["organism"],
-                                                                                                                                                                                         num_runs),
+                                                                                                                                                                                           num_runs),
                                   environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
-                                           "public": {"SHOCK_URL": self.config['shock_service_url']}})
+                                           "public": {"SHOCK_URL": self.config['shock_service_url'],
+                                                      "LOG_DIRECTORY": self.config['awe_client_logdir']}})
 
             task = awe.Task(command, "0")
             task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
@@ -88,10 +89,16 @@ class EGRIN2:
 
             builder.add_task(task)
 
-            for i in range(1, num_runs + 1):
-                cm_command = awe.Command("essuh.py", "@splitter_out %d" % i)
+            #for i in range(1, num_runs + 1):
+            for i in [1, 2]:
+                cm_command = awe.Command("cm2_runner.py",
+                                         "--organism %s --inputfile @splitter_out --run_num %d --outdb cmonkey_db_%03d" % (params['organism'], i, i),
+                                         environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
+                                                  "public": {"SHOCK_URL": self.config['shock_service_url'],
+                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']}})
                 task = awe.Task(cm_command, "%d" % task_id, depends_on=["0"])
                 task.add_shock_input('splitter_out', self.config['shock_service_url'], origin="0")
+                task.add_shock_output('cmonkey_db', self.config['shock_service_url'], filename='cmonkey_db_%03d' % i)
                 builder.add_task(task)
                 task_id += 1
 
