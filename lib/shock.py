@@ -33,11 +33,15 @@ class ShockClient:
         return r.json()
 
     def download_file(self, node_id, target_path):
+        with open(target_path, 'wb') as outfile:
+            self.download_node(node_id, outfile)
+
+    def download_node(self, node_id, outfile):
         r = requests.get(self.base_url + '/node/%s?download_raw' % node_id,
                          headers=self.auth_headers(), stream=True)
-        with open(target_path, 'wb') as outfile:
-            for chunk in r.iter_content(256):
-                outfile.write(chunk)
+        for chunk in r.iter_content(256):
+            outfile.write(chunk)
+        outfile.close()
 
 
 def upload_data(data, service_url, auth_token):
