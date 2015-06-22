@@ -98,7 +98,7 @@ class EGRIN2:
                                                              "LOG_DIRECTORY": self.config['awe_client_logdir']}})
                 task = awe.Task(cm_command, "%d" % task_id, depends_on=["0"])
                 task.add_shock_input('splitter_out', self.config['shock_service_url'], origin="0")
-                task.add_shock_output('cmonkey_db', self.config['shock_service_url'], filename='cmonkey_db_%03d' % i)
+                task.add_shock_output('cmonkey_db_%03d' % i, self.config['shock_service_url'], filename='cmonkey_db_%03d' % i)
                 builder.add_task(task)
                 task_id += 1
 
