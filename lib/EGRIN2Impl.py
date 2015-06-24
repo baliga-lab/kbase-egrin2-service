@@ -5,6 +5,11 @@ import json
 import shock
 import awe
 import traceback
+
+# Define the executables as constants so we can replace them with mock programs
+# for testing
+CM2_RUNNER = 'cm2_runner.py'
+CM2AWE = 'cm2awe.py'
 #END_HEADER
 
 
@@ -69,10 +74,9 @@ class EGRIN2:
         builder = awe.WorkflowDocumentBuilder('pipeline', 'name', project='default',
                                               user='nwportal', clientgroups='kbase')
         
-        task_id = 1
         try:
-            
-            command = awe.Command("cm2awe.py",
+            # Step 1: Splitter
+            command = awe.Command(CM2AWE,
                                   "--organism %s --nruns %d --ratios  @ratios_file --outfile splitter_out --blocks @block_file --inclusion @inclusion_file --exclusion @exclusion_file" % (params["organism"],
                                                                                                                                                                                            num_runs),
                                   environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
@@ -86,21 +90,33 @@ class EGRIN2:
             task.add_shock_input('exclusion_file', self.config['shock_service_url'], node=exclusion_file_id)
 
             task.add_shock_output('splitter_out', self.config['shock_service_url'], filename='splitter_out')
-
             builder.add_task(task)
 
-            #for i in range(1, num_runs + 1):
-            for i in [1, 2]:
-                cm_command = awe.Command("cm2_runner.py",
-                                         "--organism %s --inputfile @splitter_out --run_num %d --outdb cmonkey_db_%03d" % (params['organism'], i, i),
+            # Step 2: cmonkey2 runner
+            #run_nums = range(1, num_runs + 1)
+            run_nums = [1, 2]
+            dbfiles = ["cmonkey_db_%03d" % i for i in [1, 2]]
+
+            for run_num, dbfile in zip(run_nums, dbfiles):
+                cm_command = awe.Command(CM2_RUNNER,
+                                         "--organism %s --inputfile @splitter_out --run_num %d --outdb %s" % (params['organism'], run_num, dbfile),
                                          environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
                                                   "public": {"SHOCK_URL": self.config['shock_service_url'],
                                                              "LOG_DIRECTORY": self.config['awe_client_logdir']}})
-                task = awe.Task(cm_command, "%d" % task_id, depends_on=["0"])
+                task = awe.Task(cm_command, "%d" % run_num, depends_on=["0"])
                 task.add_shock_input('splitter_out', self.config['shock_service_url'], origin="0")
-                task.add_shock_output('cmonkey_db_%03d' % i, self.config['shock_service_url'], filename='cmonkey_db_%03d' % i)
+                task.add_shock_output(dbfile, self.config['shock_service_url'], filename=dbfile)
                 builder.add_task(task)
-                task_id += 1
+
+            # Step 3: The assemble steps
+            task_id = run_nums[-1] + 1  # we pick the next available id
+
+            # 3a. Merge runs into a large database
+            # 3b. Make corems
+            # 3c. Run resampling
+            # 3d. Finish assembling
+
+            # Step 4: Postprocessing steps
 
             print builder.doc
 
