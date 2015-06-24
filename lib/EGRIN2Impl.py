@@ -8,8 +8,8 @@ import traceback
 
 # Define the executables as constants so we can replace them with mock programs
 # for testing
-CM2_RUNNER = 'cm2_runner.py'
-CM2AWE = 'cm2awe.py'
+CM2_RUNNER = 'mock_cm2_runner.py'
+CM2AWE = 'mock_cm2awe.py'
 #END_HEADER
 
 
@@ -110,6 +110,19 @@ class EGRIN2:
 
             # Step 3: The assemble steps
             task_id = run_nums[-1] + 1  # we pick the next available id
+            arg_string = '--organism %s --ratios @ratios_file' % params["organism"]
+            input_files = ['@' + dbfile for dbfile in dbfiles]
+            arg_string = arg_string + ' ' + ' '.join(input_files)
+            merge_command = awe.Command('merge_runner.py', arg_string)
+            task = awe.Task(merge_command, '%d' % task_id, depends_on=map(str, run_nums),
+                            environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
+                                     "public": {"SHOCK_URL": self.config['shock_service_url'],
+                                                "LOG_DIRECTORY": self.config['awe_client_logdir']}})
+
+            task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
+            for run_num, dbfile in zip(run_nums, dbfiles):
+                task.add_shock_input(dbfile, self.config['shock_service_url'], origin="%d" % run_num)
+            builder.add_task(task)
 
             # 3a. Merge runs into a large database
             # 3b. Make corems
