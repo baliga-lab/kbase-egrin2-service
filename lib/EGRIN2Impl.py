@@ -53,27 +53,31 @@ class EGRIN2:
 
         print "# RUNS: %d" % num_runs
         print "organism: %s" % params['organism']
-        blocks = params["block_defs"]["blocks"]
-        inclusion_blocks = params["block_defs"]["inclusion_blocks"]
-        exclusion_blocks = params["block_defs"]["exclusion_blocks"]
 
         ratios_file_id = shock.upload_data(params['ratios'],
                                            self.config['shock_service_url'],
                                            ctx['token'])
-        blocks_file_id = shock.upload_data(blocks,
-                                           self.config['shock_service_url'],
-                                           ctx['token'])
-        inclusion_file_id = shock.upload_data(inclusion_blocks,
-                                           self.config['shock_service_url'],
-                                           ctx['token'])
-        exclusion_file_id = shock.upload_data(exclusion_blocks,
-                                           self.config['shock_service_url'],
-                                           ctx['token'])
+        has_blocks = False
+        if "block_defs" in params:
+            blocks = params["block_defs"]["blocks"]
+            inclusion_blocks = params["block_defs"]["inclusion_blocks"]
+            exclusion_blocks = params["block_defs"]["exclusion_blocks"]
+
+            blocks_file_id = shock.upload_data(blocks,
+                                               self.config['shock_service_url'],
+                                               ctx['token'])
+            inclusion_file_id = shock.upload_data(inclusion_blocks,
+                                                  self.config['shock_service_url'],
+                                                  ctx['token'])
+            exclusion_file_id = shock.upload_data(exclusion_blocks,
+                                                  self.config['shock_service_url'],
+                                                  ctx['token'])
+            has_blocks = True
 
         print "building workflow document"
         builder = awe.WorkflowDocumentBuilder('pipeline', 'name', project='default',
                                               user='nwportal', clientgroups='kbase')
-        
+        awe_tmp = None
         try:
             # Step 1: Splitter
             command = awe.Command(CM2AWE,
@@ -85,9 +89,10 @@ class EGRIN2:
 
             task = awe.Task(command, "0")
             task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
-            task.add_shock_input('block_file', self.config['shock_service_url'], node=blocks_file_id)
-            task.add_shock_input('inclusion_file', self.config['shock_service_url'], node=inclusion_file_id)
-            task.add_shock_input('exclusion_file', self.config['shock_service_url'], node=exclusion_file_id)
+            if has_blocks:
+                task.add_shock_input('block_file', self.config['shock_service_url'], node=blocks_file_id)
+                task.add_shock_input('inclusion_file', self.config['shock_service_url'], node=inclusion_file_id)
+                task.add_shock_input('exclusion_file', self.config['shock_service_url'], node=exclusion_file_id)
 
             task.add_shock_output('splitter_out', self.config['shock_service_url'], filename='splitter_out')
             builder.add_task(task)
@@ -108,26 +113,23 @@ class EGRIN2:
                 task.add_shock_output(dbfile, self.config['shock_service_url'], filename=dbfile)
                 builder.add_task(task)
 
-            # Step 3: The assemble steps
+            # Step 3a: The assemble step
             task_id = run_nums[-1] + 1  # we pick the next available id
             arg_string = '--organism %s --ratios @ratios_file' % params["organism"]
             input_files = ['@' + dbfile for dbfile in dbfiles]
             arg_string = arg_string + ' ' + ' '.join(input_files)
-            merge_command = awe.Command('merge_runner.py', arg_string)
-            task = awe.Task(merge_command, '%d' % task_id, depends_on=map(str, run_nums),
-                            environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
-                                     "public": {"SHOCK_URL": self.config['shock_service_url'],
-                                                "LOG_DIRECTORY": self.config['awe_client_logdir']}})
+            merge_command = awe.Command('merge_runner.py', arg_string,
+                                        environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
+                                                 "public": {"SHOCK_URL": self.config['shock_service_url'],
+                                                            "LOG_DIRECTORY": self.config['awe_client_logdir']}})
+            task = awe.Task(merge_command, '%d' % task_id, depends_on=map(str, run_nums))
 
             task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
             for run_num, dbfile in zip(run_nums, dbfiles):
                 task.add_shock_input(dbfile, self.config['shock_service_url'], origin="%d" % run_num)
             builder.add_task(task)
 
-            # 3a. Merge runs into a large database
-            # 3b. Make corems
-            # 3c. Run resampling
-            # 3d. Finish assembling
+            # 3b. Finish assembling
 
             # Step 4: Postprocessing steps
 
@@ -138,7 +140,8 @@ class EGRIN2:
         except:
             traceback.print_exc()
         finally:
-            awe_tmp.close()
+            if awe_tmp is not None:
+                awe_tmp.close()
 
         try:
             print "submitting AWE job"
