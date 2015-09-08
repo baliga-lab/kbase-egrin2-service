@@ -115,21 +115,32 @@ class EGRIN2:
 
             # Step 3a: The assemble step
             task_id = run_nums[-1] + 1  # we pick the next available id
-            arg_string = '--organism %s --ratios @ratios_file' % params["organism"]
+            arg_string = '--organism %s --targetdir /tmp --dbengine sqlite --targetdb result_db --ratios @ratios_file' % (params["organism"])
             input_files = ['@' + dbfile for dbfile in dbfiles]
             arg_string = arg_string + ' ' + ' '.join(input_files)
-            merge_command = awe.Command('merge_runner.py', arg_string,
-                                        environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
-                                                 "public": {"SHOCK_URL": self.config['shock_service_url'],
+            assemble_command = awe.Command('assembler.py', arg_string,
+                                           environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
+                                                    "public": {"SHOCK_URL": self.config['shock_service_url'],
                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']}})
-            task = awe.Task(merge_command, '%d' % task_id, depends_on=map(str, run_nums))
+            task = awe.Task(assemble_command, '%d' % task_id, depends_on=map(str, run_nums))
 
             task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
             for run_num, dbfile in zip(run_nums, dbfiles):
                 task.add_shock_input(dbfile, self.config['shock_service_url'], origin="%d" % run_num)
+            task.add_shock_output("result_db", self.config['shock_service_url'], filename="result_db")
             builder.add_task(task)
 
             # 3b. Finish assembling
+            task_id += 1  # we pick the next available id
+            arg_string = '--dbengine sqlite --db @result_db'
+            finish_command = awe.Command('assemble_finish.py', arg_string,
+                                         environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
+                                                  "public": {"SHOCK_URL": self.config['shock_service_url'],
+                                                            "LOG_DIRECTORY": self.config['awe_client_logdir']}})
+            task = awe.Task(finish_command, '%d' % task_id, depends_on=map(str, run_nums))
+
+            task.add_shock_input('result_db', self.config['shock_service_url'], origin="%d" % (task_id - 1))
+            builder.add_task(task)
 
             # Step 4: Postprocessing steps
 
