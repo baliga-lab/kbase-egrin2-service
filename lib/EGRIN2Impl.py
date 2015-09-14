@@ -100,7 +100,7 @@ class EGRIN2:
             # Step 2: cmonkey2 runner
             #run_nums = range(1, num_runs + 1)
             run_nums = [1, 2]
-            dbfiles = ["cmonkey_db_%03d" % i for i in [1, 2]]
+            dbfiles = ["cmonkey_run-%03d.db" % i for i in [1, 2]]
 
             for run_num, dbfile in zip(run_nums, dbfiles):
                 cm_command = awe.Command(CM2_RUNNER,
@@ -115,6 +115,7 @@ class EGRIN2:
 
             # Step 3a: The assemble step
             task_id = run_nums[-1] + 1  # we pick the next available id
+            assembler_task_id = task_id
             arg_string = '--organism %s --targetdir /tmp --dbengine sqlite --targetdb result_db --ratios @ratios_file' % (params["organism"])
             input_files = ['@' + dbfile for dbfile in dbfiles]
             arg_string = arg_string + ' ' + ' '.join(input_files)
@@ -122,24 +123,22 @@ class EGRIN2:
                                            environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
                                                     "public": {"SHOCK_URL": self.config['shock_service_url'],
                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']}})
-            task = awe.Task(assemble_command, '%d' % task_id, depends_on=map(str, run_nums))
-
+            task = awe.Task(assemble_command, str(assembler_task_id), depends_on=map(str, run_nums))
             task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
             for run_num, dbfile in zip(run_nums, dbfiles):
-                task.add_shock_input(dbfile, self.config['shock_service_url'], origin="%d" % run_num)
+                task.add_shock_input(dbfile, self.config['shock_service_url'], origin=str(run_num))
             task.add_shock_output("result_db", self.config['shock_service_url'], filename="result_db")
             builder.add_task(task)
 
             # 3b. Finish assembling
-            task_id += 1  # we pick the next available id
+            finish_task_id = assembler_task_id + 1  # we pick the next available id
             arg_string = '--dbengine sqlite --db @result_db'
             finish_command = awe.Command('assemble_finish.py', arg_string,
                                          environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
                                                   "public": {"SHOCK_URL": self.config['shock_service_url'],
                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']}})
-            task = awe.Task(finish_command, '%d' % task_id, depends_on=map(str, run_nums))
-
-            task.add_shock_input('result_db', self.config['shock_service_url'], origin="%d" % (task_id - 1))
+            task = awe.Task(finish_command, str(finish_task_id), depends_on=map(str, run_nums))
+            task.add_shock_input('result_db', self.config['shock_service_url'], origin=str(assembler_task_id))
             builder.add_task(task)
 
             # Step 4: Postprocessing steps
