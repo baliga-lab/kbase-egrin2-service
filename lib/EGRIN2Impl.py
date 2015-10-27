@@ -130,19 +130,7 @@ class EGRIN2:
             task.add_shock_output("result_db", self.config['shock_service_url'], filename="result_db")
             builder.add_task(task)
 
-            # 3b. Finish assembling
-            finish_task_id = assembler_task_id + 1  # we pick the next available id
-            arg_string = '--dbengine sqlite --db @result_db'
-            finish_command = awe.Command('assemble_finish.py', arg_string,
-                                         environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
-                                                  "public": {"SHOCK_URL": self.config['shock_service_url'],
-                                                            "LOG_DIRECTORY": self.config['awe_client_logdir']}})
-            task = awe.Task(finish_command, str(finish_task_id), depends_on=map(str, run_nums))
-            task.add_shock_input('result_db', self.config['shock_service_url'], origin=str(assembler_task_id))
-            builder.add_task(task)
-
-            # Step 4: Postprocessing steps
-
+            # Submit
             print builder.doc
 
             awe_tmp = tempfile.NamedTemporaryFile(mode='w', delete=False)
