@@ -1,6 +1,8 @@
 module EGRIN2 {
     /* A job id defined by the service */
     typedef string job_id;
+    typedef int boolean;
+
     typedef structure {
         string name;
         list<string> data;
@@ -12,47 +14,45 @@ module EGRIN2 {
         string exclusion_blocks;
     } BlockDefinitions;
 
-    /**********************************************************/
-    /* Result definitions         START                       */
-    /* all information currently generated during EGRIN2      */
-    /* runs                                                   */
-    /**********************************************************/
     typedef structure {
         list<string> row_names;
         list<string> col_names;
-        list<list<double>> values;
+        list<list<float>> values;
     } SimpleGeneExpressionMatrix;
 
     typedef structure {
         string seq_name;
-        bool reverse;
+        boolean reverse;
         int start;
-        double pvalue;
+        float pvalue;
     } MotifSite;
 
     typedef structure {
-        double a, c, g, t;
+        float a;
+        float c;
+        float g;
+        float t;
     } PSSMRow;
 
     typedef structure {
         string seqtype;
         int motif_num;
-        double evalue;
+        float evalue;
         list<MotifSite> sites;
         list<PSSMRow> pssm_rows;
     } Motif;
 
-    typedef structure Bicluster {
-        double residual;
+    typedef structure {
+        float residual;
         int num;
         list<string> row_names;
         list<string> col_names;
         list<Motif> motifs;
-    };
+    } Bicluster;
 
     typedef structure {
         string name;
-        double pvalue;
+        float pvalue;
     } CoremColumn;
 
     typedef structure {
@@ -62,11 +62,11 @@ module EGRIN2 {
 
     typedef structure {
         int num;
-        double density;
-        double weighted_density;
+        float density;
+        float weighted_density;
         list<string> rows;
         list<CoremColumn> columns;
-        list<string
+        list<CoremEdge> edges;
     } Corem;
 
     typedef structure {
@@ -80,6 +80,7 @@ module EGRIN2 {
         list<string> column_names;
         list<Bicluster> clusters;
     } EnsembleRun;
+
     /*
     The parameters to run an ensemble.
     organism - a KEGG code specifying the organism
@@ -95,9 +96,6 @@ module EGRIN2 {
         string pipeline;
         list<SetEnrichmentSet> setenrichment_sets;
     } EnsembleParams;
-    /**********************************************************/
-    /* Result definitions    END                              */
-    /**********************************************************/
 
     /*
      * Starts an ensemble run. The state of the computation can be obtained by
@@ -107,5 +105,6 @@ module EGRIN2 {
      * We need to propagate the authentication token, marking this function
      * as "authentication required" will put the token into the context object
      */
-    funcdef run_ensemble(EnsembleParams params) returns (job_id jobid) authentication required;
+    authentication required;
+    funcdef run_ensemble(EnsembleParams params) returns (job_id jobid);
 };
