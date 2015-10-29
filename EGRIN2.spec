@@ -12,6 +12,74 @@ module EGRIN2 {
         string exclusion_blocks;
     } BlockDefinitions;
 
+    /**********************************************************/
+    /* Result definitions         START                       */
+    /* all information currently generated during EGRIN2      */
+    /* runs                                                   */
+    /**********************************************************/
+    typedef structure {
+        list<string> row_names;
+        list<string> col_names;
+        list<list<double>> values;
+    } SimpleGeneExpressionMatrix;
+
+    typedef structure {
+        string seq_name;
+        bool reverse;
+        int start;
+        double pvalue;
+    } MotifSite;
+
+    typedef structure {
+        double a, c, g, t;
+    } PSSMRow;
+
+    typedef structure {
+        string seqtype;
+        int motif_num;
+        double evalue;
+        list<MotifSite> sites;
+        list<PSSMRow> pssm_rows;
+    } Motif;
+
+    typedef structure Bicluster {
+        double residual;
+        int num;
+        list<string> row_names;
+        list<string> col_names;
+        list<Motif> motifs;
+    };
+
+    typedef structure {
+        string name;
+        double pvalue;
+    } CoremColumn;
+
+    typedef structure {
+        string row1;
+        string row2;
+    } CoremEdge;
+
+    typedef structure {
+        int num;
+        double density;
+        double weighted_density;
+        list<string> rows;
+        list<CoremColumn> columns;
+        list<string
+    } Corem;
+
+    typedef structure {
+        string date_added;
+        string start_time;
+        string finish_time;
+        int num_iterations;
+        string organism;
+        string species;
+        list<string> row_names;
+        list<string> column_names;
+        list<Bicluster> clusters;
+    } EnsembleRun;
     /*
     The parameters to run an ensemble.
     organism - a KEGG code specifying the organism
@@ -27,6 +95,9 @@ module EGRIN2 {
         string pipeline;
         list<SetEnrichmentSet> setenrichment_sets;
     } EnsembleParams;
+    /**********************************************************/
+    /* Result definitions    END                              */
+    /**********************************************************/
 
     /*
      * Starts an ensemble run. The state of the computation can be obtained by
