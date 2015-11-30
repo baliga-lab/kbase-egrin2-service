@@ -28,6 +28,7 @@ module EGRIN2 {
         BlockDefinitions block_defs;
         string pipeline;
         list<SetEnrichmentSet> setenrichment_sets;
+        string target_ws;
     } EnsembleParams;
 
     /*
