@@ -4,6 +4,7 @@ import os
 import json
 import shock
 import awe
+import egrin2
 import traceback
 
 import biokbase.workspace.client as wsc
@@ -21,7 +22,6 @@ class EGRIN2:
     EGRIN2
 
     Module Description:
-    
     '''
 
     ######## WARNING FOR GEVENT USERS #######
@@ -64,6 +64,7 @@ class EGRIN2:
             print "workspace created."
         except:
             print "workspace exists or unknown error"
+        egrin2.store_ratios(ws_service, params['target_ws'], params['ratios'])
 
         ratios_file_id = shock.upload_data(params['ratios'],
                                            self.config['shock_service_url'],
