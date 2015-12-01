@@ -6,6 +6,8 @@ import shock
 import awe
 import traceback
 
+import biokbase.workspace.client as wsc
+
 # Define the executables as constants so we can replace them with mock programs
 # for testing
 CM2_RUNNER = 'mock_cm2_runner.py'
@@ -39,6 +41,7 @@ class EGRIN2:
         print "AWE service at: %s" % self.config['awe_service_url']
         print "Shock service at: %s" % self.config['shock_service_url']
         print "UJS service at: %s" % self.config['shock_service_url']
+        print "workspace service at: %s" % self.config['ws_service_url']
 	print config
         #END_CONSTRUCTOR
         pass
@@ -53,6 +56,14 @@ class EGRIN2:
 
         print "# RUNS: %d" % num_runs
         print "organism: %s" % params['organism']
+
+        ws_service = wsc.Workspace(self.config['ws_service_url'], token=ctx['token'])
+        try:
+            print "trying to create workspace '%s'..." % params['target_ws']
+            ws_service.create_workspace({'workspace': params['target_ws']})
+            print "workspace created."
+        except:
+            print "workspace exists or unknown error"
 
         ratios_file_id = shock.upload_data(params['ratios'],
                                            self.config['shock_service_url'],
