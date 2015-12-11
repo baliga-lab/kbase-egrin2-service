@@ -67,4 +67,10 @@ module egrin2isb {
         list<string> column_names;
         list<Bicluster> clusters;
     } EnsembleRun;
+
+    typedef structure {
+        list<string> run_ids;
+        string expression_id;
+        list<string> corem_ids;
+    };
 };

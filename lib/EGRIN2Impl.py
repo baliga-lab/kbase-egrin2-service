@@ -119,7 +119,7 @@ class EGRIN2:
                                          "--organism %s --inputfile @splitter_out --run_num %d --outdb %s" % (params['organism'], run_num, dbfile),
                                          environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
                                                   "public": {"SHOCK_URL": self.config['shock_service_url'],
-                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']}})
+                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']]})
                 task = awe.Task(cm_command, "%d" % run_num, depends_on=["0"])
                 task.add_shock_input('splitter_out', self.config['shock_service_url'], origin="0")
                 task.add_shock_output(dbfile, self.config['shock_service_url'], filename=dbfile)
@@ -134,7 +134,9 @@ class EGRIN2:
             assemble_command = awe.Command('assembler.py', arg_string,
                                            environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
                                                     "public": {"SHOCK_URL": self.config['shock_service_url'],
-                                                            "LOG_DIRECTORY": self.config['awe_client_logdir']}})
+                                                                "LOG_DIRECTORY": self.config['awe_client_logdir'],
+                                                                "WS_URL": self.config['ws_service_url'],
+                                                                "TARGET_WS": params['target_ws']}})
             task = awe.Task(assemble_command, str(assembler_task_id), depends_on=map(str, run_nums))
             task.add_shock_input('ratios_file', self.config['shock_service_url'], node=ratios_file_id)
             for run_num, dbfile in zip(run_nums, dbfiles):
