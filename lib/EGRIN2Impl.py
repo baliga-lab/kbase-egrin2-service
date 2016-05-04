@@ -9,10 +9,6 @@ import traceback
 
 import biokbase.workspace.client as wsc
 
-# Define the executables as constants so we can replace them with mock programs
-# for testing
-CM2_RUNNER = 'mock_cm2_runner.py'
-CM2AWE = 'mock_cm2awe.py'
 #END_HEADER
 
 
@@ -22,7 +18,6 @@ class EGRIN2:
     EGRIN2
 
     Module Description:
-    
     '''
 
     ######## WARNING FOR GEVENT USERS #######
@@ -93,7 +88,7 @@ class EGRIN2:
         awe_tmp = None
         try:
             # Step 1: Splitter
-            command = awe.Command(CM2AWE,
+            command = awe.Command(self.config['cm2awe'],
                                   "--organism %s --nruns %d --ratios  @ratios_file --outfile splitter_out --blocks @block_file --inclusion @inclusion_file --exclusion @exclusion_file" % (params["organism"],
                                                                                                                                                                                            num_runs),
                                   environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
@@ -116,7 +111,7 @@ class EGRIN2:
             dbfiles = ["cmonkey_run-%03d.db" % i for i in [1, 2]]
 
             for run_num, dbfile in zip(run_nums, dbfiles):
-                cm_command = awe.Command(CM2_RUNNER,
+                cm_command = awe.Command(self.config['cm2_runner'],
                                          "--organism %s --inputfile @splitter_out --run_num %d --outdb %s" % (params['organism'], run_num, dbfile),
                                          environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
                                                   "public": {"SHOCK_URL": self.config['shock_service_url'],
