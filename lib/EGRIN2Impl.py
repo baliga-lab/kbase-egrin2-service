@@ -22,6 +22,7 @@ class EGRIN2:
     EGRIN2
 
     Module Description:
+    
     '''
 
     ######## WARNING FOR GEVENT USERS #######
@@ -119,7 +120,7 @@ class EGRIN2:
                                          "--organism %s --inputfile @splitter_out --run_num %d --outdb %s" % (params['organism'], run_num, dbfile),
                                          environ={"private": {"KB_AUTH_TOKEN": ctx['token']},
                                                   "public": {"SHOCK_URL": self.config['shock_service_url'],
-                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']]})
+                                                             "LOG_DIRECTORY": self.config['awe_client_logdir']}})
                 task = awe.Task(cm_command, "%d" % run_num, depends_on=["0"])
                 task.add_shock_input('splitter_out', self.config['shock_service_url'], origin="0")
                 task.add_shock_output(dbfile, self.config['shock_service_url'], filename=dbfile)
